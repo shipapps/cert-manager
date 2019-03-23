@@ -1,0 +1,73 @@
+assets:
+  v1:
+    - github:
+          repo: jetstack/cert-manager
+          path: deploy/manifests/00-crds.yaml
+          strip_path: true
+          dest: base/
+          ref: v0.7.0
+    - inline:
+          dest: base/namespace.yaml
+          contents: |
+            ---
+            apiVersion: v1
+            kind: Namespace
+            metadata:
+              name: cert-manager
+              labels:
+                "certmanager.k8s.io/disable-validation": "true"
+    - github:
+          repo: jetstack/cert-manager
+          path: deploy/charts/cert-manager
+          strip_path: true
+          dest: chart
+          ref: v0.7.0
+
+config:
+  v1: []
+lifecycle:
+  v1:
+    - message:
+        contents: |
+          ## Cert Manager
+
+          This guide will walk you through configuring Cert Manager for your Kubernetes cluster.
+
+          It is roughly equivalent to following the [Installing with Helm](https://docs.cert-manager.io/en/latest/getting-started/install.html#installing-with-helm) guide, but includes opportunities to add [Kustomize](https://kustomize.io) patches on top of the rendered helm chart before depoying.
+
+          Tiller is not required for this install, all Helm templating is done client-side.
+    - render:
+        root: .
+    - helmIntro: {}
+    - helmValues:
+        path: chart/values.yaml
+    - render:
+        root: .
+        assets:
+          v1:
+            - helm:
+                dest: base/cert-manager
+                helm_opts:
+                  - --namespace=cert-manager
+                  - --name=cert-manager
+                local:
+                  chart_root: ./chart
+                values_from:
+                  # hack, helmValues still needs a configurable dest path for us to store the output
+                  path: .ship/tmp
+    - kustomizeIntro: {}
+    - kustomize:
+        base: base
+        overlay: overlays/ship
+        dest: cert-manager-all.yaml
+    - message:
+        contents: |
+          ## All set
+
+          You can deploy cert manager to your cluster with
+
+              kubectl apply -f cert-manager-all.yamll
+
+          Next, you can [verify the installation](https://docs.cert-manager.io/en/latest/getting-started/install.html#verifying-the-installation) according to the cert-manager docs.
+
+
