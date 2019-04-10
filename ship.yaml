@@ -5,7 +5,7 @@ assets:
           path: deploy/manifests/00-crds.yaml
           strip_path: true
           dest: base/
-          ref: v0.7.0
+          ref: master
     - inline:
           dest: base/namespace.yaml
           contents: |
@@ -21,7 +21,7 @@ assets:
           path: deploy/charts/cert-manager
           strip_path: true
           dest: chart
-          ref: v0.7.0
+          ref: master
 
 config:
   v1: []
